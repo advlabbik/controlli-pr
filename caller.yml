@@ -14,9 +14,9 @@ jobs:
     if: >-
       github.event_name == 'pull_request_target' ||
       (github.event.issue.pull_request &&
-      (contains(github.event.comment.body, 'COMPATIBILITA') ||
+      (contains(github.event.comment.body, 'COMPATIBILIT') ||
       contains(github.event.comment.body, 'EMERGENZA') ||
-      contains(github.event.changes.body.from, 'COMPATIBILITA') ||
+      contains(github.event.changes.body.from, 'COMPATIBILIT') ||
       contains(github.event.changes.body.from, 'EMERGENZA')))
     concurrency:
       group: compatibilita-${{ github.event.pull_request.number || github.event.issue.number }}

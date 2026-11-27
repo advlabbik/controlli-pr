@@ -7,7 +7,7 @@ CALLER = (pathlib.Path(__file__).parent / "caller.yml").read_text()
 
 class Caller(unittest.TestCase):
     def test_i_commenti_irrilevanti_non_fanno_partire_il_job(self):
-        for word in ("COMPATIBILITA", "EMERGENZA"):
+        for word in ("COMPATIBILIT", "EMERGENZA"):  # senza la vocale finale: vale anche con l'accento
             # commento nuovo o cancellato, e commento da cui la parola è stata tolta modificandolo
             self.assertIn(f"contains(github.event.comment.body, '{word}')", CALLER)
             self.assertIn(f"contains(github.event.changes.body.from, '{word}')", CALLER)
