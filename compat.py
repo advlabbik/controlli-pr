@@ -4,6 +4,7 @@ import os
 import pathlib
 import re
 import subprocess
+import unicodedata
 
 CONTEXT = "compatibilita-main"
 REQUEST_MARKER = "<!-- compatibilita-main -->"
@@ -15,18 +16,29 @@ BLOCKS = {
 }
 
 
+def _header(line: str) -> str:
+    """Intestazione senza accenti, spazi, trattini e due punti."""
+    plain = unicodedata.normalize("NFKD", line).encode("ascii", "ignore").decode()
+    return re.sub(r"[\s_:-]", "", plain).upper()
+
+
+_HEADERS = {_header(name): name for name in BLOCKS}
+
+
 def _blocks(body: str):
     """I blocchi presenti in un commento, come (tipo, campi)."""
     kind, fields = None, {}
     for raw in (body or "").splitlines():
-        line = raw.strip()
-        if line.upper() in BLOCKS:
+        # via il Markdown comune: grassetto, titoli, elenchi e citazioni
+        line = re.sub(r"\*\*|__", "", raw).strip()
+        line = re.sub(r"^(?:[#>*-]+\s*)+", "", line)
+        if _header(line) in _HEADERS:
             if kind:
                 yield kind, fields
-            kind, fields = line.upper(), {}
+            kind, fields = _HEADERS[_header(line)], {}
         elif kind and ":" in line:
             label, value = line.split(":", 1)
-            fields.setdefault(label.strip().lower(), value.strip())
+            fields.setdefault(" ".join(label.split()).lower(), value.strip())
     if kind:
         yield kind, fields
 
@@ -35,7 +47,7 @@ def _complete(kind: str, fields: dict, head_sha: str) -> bool:
     values = [fields.get(name, "") for name in BLOCKS[kind]]
     if any(not v or re.fullmatch(r"<.*>", v) for v in values):
         return False
-    commit = fields["commit"].strip("`").lower()
+    commit = fields["commit"].split()[0].strip("`").lower()
     return len(commit) >= 7 and head_sha.lower().startswith(commit)
 
 

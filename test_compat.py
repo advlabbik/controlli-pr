@@ -49,6 +49,26 @@ class Risposta(unittest.TestCase):
         self.assertEqual(state(c(reply(commit="999999a") + "\n\n" + reply())), "success")
 
 
+class Markdown(unittest.TestCase):
+    def test_formattazioni_comuni_valgono(self):
+        for old, new in [
+            ("COMPATIBILITA-MAIN", "**COMPATIBILITA-MAIN**"), ("COMPATIBILITA-MAIN", "### COMPATIBILITA-MAIN"),
+            ("COMPATIBILITA-MAIN", "COMPATIBILITA MAIN"), ("COMPATIBILITA-MAIN", "COMPATIBILITÀ-MAIN"),
+            ("COMPATIBILITA-MAIN", "COMPATIBILITA-MAIN:"), ("Commit:", "**Commit:**"), ("Commit:", "- Commit:"),
+            ("Aggiornato con main:", "Aggiornato  con main:"), ("Aggiornato con main:", "Aggiornato\u00a0con main:"),
+            ("Commit: abc1234", "Commit: abc1234 (ultimo)"), ("Test eseguiti:", "* __Test eseguiti__:"),
+        ]:
+            with self.subTest(new=new):
+                self.assertEqual(state(c(reply().replace(old, new))), "success")
+
+    def test_la_formattazione_non_rende_valido_cio_che_non_lo_e(self):
+        self.assertEqual(state(c(reply(tests="**<comandi o build>**"))), "failure")
+        self.assertEqual(state(c(reply(tests="**"))), "failure")
+        self.assertEqual(state(c(reply().replace("COMPATIBILITA-MAIN", "la compatibilità main è ok"))), "failure")
+        self.assertEqual(state(c("Emergenza?\nCommit: abc1234\nMotivo: x")), "failure")
+        self.assertEqual(state(c(SOS.replace("EMERGENZA", "**EMERGENZA**"))), "success")
+
+
 class Emergenza(unittest.TestCase):
     def test_emergenza_motivata(self):
         r = evaluate(SHA, [c(SOS)])

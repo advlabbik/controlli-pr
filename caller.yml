@@ -8,9 +8,16 @@ permissions:
   contents: read
   pull-requests: write
   statuses: write
-concurrency:
-  group: compatibilita-${{ github.event.pull_request.number || github.event.issue.number }}
 jobs:
   compat:
-    if: github.event_name == 'pull_request_target' || github.event.issue.pull_request
+    # dei commenti contano solo quelli che riguardano il controllo, anche modificati o cancellati
+    if: >-
+      github.event_name == 'pull_request_target' ||
+      (github.event.issue.pull_request &&
+      (contains(github.event.comment.body, 'COMPATIBILIT') ||
+      contains(github.event.comment.body, 'EMERGENZA') ||
+      contains(github.event.changes.body.from, 'COMPATIBILIT') ||
+      contains(github.event.changes.body.from, 'EMERGENZA')))
+    concurrency:
+      group: compatibilita-${{ github.event.pull_request.number || github.event.issue.number }}
     uses: advlabbik/controlli-pr/.github/workflows/compat.yml@main
