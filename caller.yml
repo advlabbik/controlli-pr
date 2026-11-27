@@ -1,0 +1,16 @@
+name: compatibilita-main
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, edited, ready_for_review]
+  issue_comment:
+    types: [created, edited, deleted]
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+concurrency:
+  group: compatibilita-${{ github.event.pull_request.number || github.event.issue.number }}
+jobs:
+  compat:
+    if: github.event_name == 'pull_request_target' || github.event.issue.pull_request
+    uses: advlabbik/controlli-pr/.github/workflows/compat.yml@main

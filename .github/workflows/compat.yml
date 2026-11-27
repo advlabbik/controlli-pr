@@ -1,0 +1,18 @@
+# Richiamato dal file .github/workflows/compatibilita.yml di ogni repo.
+# Scarica solo questo repo: il codice della PR non viene mai scaricato né eseguito.
+name: compat
+on:
+  workflow_call:
+jobs:
+  stato:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: advlabbik/controlli-pr
+          ref: main
+          persist-credentials: false
+      - run: python3 compat.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
